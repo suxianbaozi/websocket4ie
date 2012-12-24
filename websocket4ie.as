@@ -6,7 +6,8 @@ package {
 	import flash.system.Security;
 	import flash.utils.Timer;
         import flash.net.Socket;
-        
+        import flash.utils.ByteArray;
+
 	public class websocket4ie extends Sprite {
             // Cause SWFUpload to start as soon as the movie starts
             public static function main():void
@@ -83,12 +84,18 @@ package {
                 
             }
 
-            public position = 0;
+            public var position:Number = 0;
 
 
             public function readOnData():void {
-                var tmpPos = this.position;
+
+                
+                
+                var tmpPos:Number = this.position;
                 this.socketBuffer.position = this.position;
+
+                ExternalInterface.call("test","位置:"+this.socketBuffer.position+'');
+                ExternalInterface.call("test","可用:"+this.socketBuffer.bytesAvailable+'');
                 //read 一个 0x81
                 if(this.socketBuffer.bytesAvailable>=1) {
                     var h:Number = this.socketBuffer.readByte();
@@ -103,7 +110,7 @@ package {
                                 this.readOnData();
                             } else {
                                 this.position = tmpPos;
-                                return false;
+                                return;
                             }
                         } else if(len==126) {
                             if(this.socketBuffer.bytesAvailable>=2) {
@@ -115,30 +122,32 @@ package {
                                 }
                             } else {
                                 this.position = tmpPos;
-                                return false;
+                                return;
                             }
                         }
                     } else {
                         this.position = tmpPos;
-                        return false;
+                        return;
                     }
                 } else {
                     this.position = tmpPos;
-                    return false;
+                    return;
                 }
             }
             public function onText(text:String):void {
                 ExternalInterface.call("onText",text);
             }
             
-            public function writeBytes(bytes:byteArray):void {
+            public function writeBytes(bytes:ByteArray):void {
+                ExternalInterface.call("test","可用:");
                 this.socketBuffer.position = this.socketBuffer.length-1;
                 this.socketBuffer.writeBytes(bytes,0,bytes.length);
                 this.readOnData();
             }
-            public is_head:Boolean = true;
-            public function onSocketData(e:ProgressEvent):void {
-                var bytes:byteArray;
+            public var is_head:Boolean = true;
+
+            public function onSocketData(e:Event):void {
+                var bytes:ByteArray;
                 if(this.is_head) {
                     while(this.socket.bytesAvailable) {
                         var x:Number = this.socket.readByte();
@@ -150,15 +159,17 @@ package {
                             continue; 
                         }
                     }
+                    
                     if(this.socket.bytesAvailable) { 
                         this.socket.readBytes(bytes,0,this.socket.bytesAvailable);
                     }
                 } else {
                     this.socket.readBytes(bytes,0,this.socket.bytesAvailable);
                 }
-                bytes.position = 0;
-                this.writeBytes(bytes);
+                if(bytes) { 
+                    bytes.position = 0;
+                    this.writeBytes(bytes);
+                }
             }
-            
 	}
 }
