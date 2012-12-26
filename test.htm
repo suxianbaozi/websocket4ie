@@ -8,9 +8,17 @@
 <body>
 
 <script>
-var s = new socket();
-s.debug = 0;
+var s = new socket4ie();
 s.connect("192.168.187.15",88);
+s.onConnect = function() {
+    console.log("已经建立链接");
+}
+s.onClose = function() {
+    console.log("已经端口链接");
+}
+s.onData = function(text) {
+    console.log(text+'--');
+}
 </script>
 
 </body>

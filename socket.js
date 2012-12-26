@@ -15,7 +15,7 @@ var handlers = {
 };
 
 
-function socket() {
+function socket4ie() {
     this.debug = 0;
     this.init = function() {
         this.index = handlers.connects.length;
@@ -38,13 +38,13 @@ function socket() {
         document.body.appendChild(div);
     }
     this.onClose  = function() {
-        console.log("链接被关闭");
+        
     }
     this.onConnect = function() {
-        console.log("链接成功");
+        
     }
     this.onData = function(text) {
-        console.log(text);
+        
     }
     this.init();
 }
