@@ -4,6 +4,7 @@ var handlers = {
         this.connects[index.replace("socket_","")].onclose();
     },
     'onConnect':function(index) {
+        
         this.connects[index.replace("socket_","")].onopen();
     },
     'onData':function(index,text) {
@@ -46,5 +47,29 @@ function socket4ie() {
     this.onmessage = function(text) {
         
     }
+    this.send = function(text) {
+        this.callFlash("sendData",[text]);
+    }
+    
+    
+    this.callFlash = function (functionName, argumentArray) {
+        argumentArray = argumentArray || [];
+        
+        var movieElement = document.getElementById("socket_"+this.index);
+        
+        var returnValue, returnString;
+        
+        // Flash's method if calling ExternalInterface methods (code adapted from MooTools).
+        try {
+                returnString = movieElement.CallFunction('<invoke name="' + functionName + '" returntype="javascript">' + __flash__argumentsToXML(argumentArray, 0) + '</invoke>');
+                returnValue = eval(returnString);
+        } catch (ex) {
+                throw "Call to " + functionName + " failed";
+        }
+        
+
+        return returnValue;
+    };
+    
     this.init();
 }

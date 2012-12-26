@@ -10,13 +10,15 @@
 <script>
 var s = new socket4ie();
 s.connect("192.168.187.15",88);
-s.onConnect = function() {
+
+s.onopen = function() {
     alert("已经建立链接");
 }
-s.onClose = function() {
+
+s.onclose = function() {
     alert("已经端口链接");
 }
-s.onData = function(text) {
+s.onmessage = function(text) {
     alert(text+'--');
 }
 </script>
