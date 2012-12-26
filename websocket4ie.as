@@ -52,7 +52,7 @@ package {
             }
 
             public function onConnect(e:Event):void {
-                ExternalInterface.call("connectHandle");
+                
                 //握手
                 var headers:Array = new Array();
                 headers.push("GET /chat HTTP/1.1\r\n");
@@ -64,6 +64,11 @@ package {
                 headers.push("Sec-WebSocket-Version: 13\r\n\r\n\r\n");
                 this.socket.writeUTFBytes(headers.join('')); 
                 this.socket.flush();
+            }
+
+
+            public function onTrueConnect():void {
+                ExternalInterface.call("connectHandle");
             }
             
             public function onClose(e:Event):void {
@@ -148,9 +153,15 @@ package {
                 this.debug("buffer数据:"+this.socketBuffer.length);
                 this.readOnData();
             }
+
             public var is_head:Boolean = true;
+            public var header:ByteArray = new ByteArray();
+            public var headers:Array = new Array();
             public function onSocketData(e:Event):void {
                 var bytes:ByteArray = new ByteArray();
+
+                
+
                 if(this.is_head) {
                     while(this.socket.bytesAvailable) {
                         var x:Number = this.socket.readUnsignedByte();
@@ -158,8 +169,20 @@ package {
                         if(x==0x81) {
                             this.is_head = false;
                             bytes.writeByte(0x81);
+                            this.debug(this.headers);
                             break;
                         } else {
+                            this.header.writeByte(x);
+                            
+                            if(x==10) {
+                                this.header.position = 0;
+                                
+                                this.headers.push(this.header.readUTFBytes(this.header.length));
+                                if(this.header.length==2) {
+                                    this.onTrueConnect();
+                                }
+                                this.header = new ByteArray();
+                            }
                             continue; 
                         }
                     }
@@ -171,6 +194,28 @@ package {
                 }
                 bytes.position = 0;
                 this.writeBytes(bytes);
+            }
+
+            public function sendData(text:String):void {
+                var head:ByteArray = new ByteArray();
+                head.writeByte(0x81);
+                var body:ByteArray = new ByteArray();
+                body.writeUTFBytes(text);
+                var len:Number = body.length;
+                if(len<=125) {
+                    head.writeByte(len);
+                } else if(len<65536){
+                    head.writeByte(126);
+                    head.writeShort(len);
+                } else {
+                    head.writeByte(127);
+                    head.writeUnsignedInt(len);
+                }
+                body.position = 0;
+                head.position = 0;
+                this.socket.writeBytes(head);
+                this.socket.writeBytes(body);
+                this.socket.flush();
             }
 	}
 }
