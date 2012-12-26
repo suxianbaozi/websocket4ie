@@ -6,7 +6,7 @@ websocket4ie
 服务端,可以用我另外一个python写的websocket服务端
 
 
-由于flash链接需要一个843的端口验证,所以需要另开启一个服务,我用python写了个,你要修改一下,然后跑起来
+由于flash的socket需要一个843的端口验证,所以需要另开启一个服务,我用python写了个,你要修改一下,然后跑起来
 
 
 其它看test.htm
