@@ -9,7 +9,7 @@ package {
         import flash.utils.ByteArray;
         import flash.utils.Endian;
 	public class websocket4ie extends Sprite {
-            // Cause SWFUpload to start as soon as the movie starts
+            
             public static function main():void
             {       
                 var websocket4ie:websocket4ie = new websocket4ie();
