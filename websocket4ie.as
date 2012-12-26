@@ -7,7 +7,7 @@ package {
 	import flash.utils.Timer;
         import flash.net.Socket;
         import flash.utils.ByteArray;
-
+        import flash.utils.Endian;
 	public class websocket4ie extends Sprite {
             // Cause SWFUpload to start as soon as the movie starts
             public static function main():void
@@ -22,7 +22,7 @@ package {
             private var port:Number;
 
             private var socket:Socket; 
-            private var socketBuffer:ByteArray;
+            private var socketBuffer:ByteArray = new ByteArray();
             public function websocket4ie() {
                 Security.allowDomain("*");	
                 var counter:Number = 0;
@@ -31,7 +31,7 @@ package {
                 this.movieName = root.loaderInfo.parameters.movieName;
                 this.server = root.loaderInfo.parameters.server;
                 this.port = root.loaderInfo.parameters.port;
-                ExternalInterface.call("alert",this.port+''+this.server);
+                this.debug(this.port+''+this.server);
                 try {
                     this.debugEnabled = root.loaderInfo.parameters.debugEnabled == "true" ? true : false;
                 } catch (ex:Object) {
@@ -41,6 +41,7 @@ package {
             }
             public function connectServer():void {
                 socket = new Socket();
+                socket.endian = Endian.BIG_ENDIAN;
                 socket.addEventListener(Event.CONNECT, onConnect);       
                 socket.addEventListener(Event.CLOSE, onClose);
                 socket.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
@@ -86,7 +87,9 @@ package {
 
             public var position:Number = 0;
 
-
+            public function debug(str:*):void {
+                ExternalInterface.call("console.log",str);
+            }
             public function readOnData():void {
 
                 
@@ -94,14 +97,14 @@ package {
                 var tmpPos:Number = this.position;
                 this.socketBuffer.position = this.position;
 
-                ExternalInterface.call("test","位置:"+this.socketBuffer.position+'');
-                ExternalInterface.call("test","可用:"+this.socketBuffer.bytesAvailable+'');
                 //read 一个 0x81
                 if(this.socketBuffer.bytesAvailable>=1) {
-                    var h:Number = this.socketBuffer.readByte();
+                    var h:Number = this.socketBuffer.readUnsignedByte();
+                    this.debug("头:"+h);
                     this.position += 1;
                     if(this.socketBuffer.bytesAvailable>=1) { 
-                        var len:Number = this.socketBuffer.readByte();
+                        var len:Number = this.socketBuffer.readUnsignedByte();
+                        this.debug("长度:"+len);
                         this.position += 1;
                         if(len<=125) {
                             if(this.socketBuffer.bytesAvailable>=len) { 
@@ -139,18 +142,19 @@ package {
             }
             
             public function writeBytes(bytes:ByteArray):void {
-                ExternalInterface.call("test","可用:");
-                this.socketBuffer.position = this.socketBuffer.length-1;
+                
+                this.socketBuffer.position = this.socketBuffer.length;
                 this.socketBuffer.writeBytes(bytes,0,bytes.length);
+                this.debug("buffer数据:"+this.socketBuffer.length);
                 this.readOnData();
             }
             public var is_head:Boolean = true;
-
             public function onSocketData(e:Event):void {
-                var bytes:ByteArray;
+                var bytes:ByteArray = new ByteArray();
                 if(this.is_head) {
                     while(this.socket.bytesAvailable) {
-                        var x:Number = this.socket.readByte();
+                        var x:Number = this.socket.readUnsignedByte();
+                        
                         if(x==0x81) {
                             this.is_head = false;
                             bytes.writeByte(0x81);
@@ -159,17 +163,14 @@ package {
                             continue; 
                         }
                     }
-                    
                     if(this.socket.bytesAvailable) { 
-                        this.socket.readBytes(bytes,0,this.socket.bytesAvailable);
+                        this.socket.readBytes(bytes,1,this.socket.bytesAvailable);
                     }
                 } else {
                     this.socket.readBytes(bytes,0,this.socket.bytesAvailable);
                 }
-                if(bytes) { 
-                    bytes.position = 0;
-                    this.writeBytes(bytes);
-                }
+                bytes.position = 0;
+                this.writeBytes(bytes);
             }
 	}
 }
