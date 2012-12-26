@@ -1,13 +1,13 @@
 var handlers = {
     'connects':[],
     'onClose':function(index,flag) {
-        this.connects[index.replace("socket_","")].onClose();
+        this.connects[index.replace("socket_","")].onclose();
     },
     'onConnect':function(index) {
-        this.connects[index.replace("socket_","")].onConnect();
+        this.connects[index.replace("socket_","")].onopen();
     },
     'onData':function(index,text) {
-        this.connects[index.replace("socket_","")].onData(text);
+        this.connects[index.replace("socket_","")].onmessage(text);
     },
     'debug':function(index,str) {
         console.log(str);
@@ -37,13 +37,13 @@ function socket4ie() {
         div.innerHTML = html;
         document.body.appendChild(div);
     }
-    this.onClose  = function() {
+    this.onclose  = function() {
         
     }
-    this.onConnect = function() {
+    this.onopen = function() {
         
     }
-    this.onData = function(text) {
+    this.onmessage = function(text) {
         
     }
     this.init();
