@@ -16,11 +16,11 @@ package {
             }
             private var debugEnabled:Boolean;
             private var movieName:String;
-
+            private var handlers:String;
             private var server:String;
-
+            
             private var port:Number;
-
+            private var isDebug:Number;
             private var socket:Socket; 
             private var socketBuffer:ByteArray = new ByteArray();
             public function websocket4ie() {
@@ -29,8 +29,10 @@ package {
                 root.addEventListener(Event.ENTER_FRAME, function ():void { if (++counter > 100) counter = 0; });
 
                 this.movieName = root.loaderInfo.parameters.movieName;
+                this.handlers = root.loaderInfo.parameters.handlers;
                 this.server = root.loaderInfo.parameters.server;
                 this.port = root.loaderInfo.parameters.port;
+                this.isDebug = root.loaderInfo.parameters.debug;
                 this.debug(this.port+''+this.server);
                 try {
                     this.debugEnabled = root.loaderInfo.parameters.debugEnabled == "true" ? true : false;
@@ -38,6 +40,7 @@ package {
                     this.debugEnabled = false;
                 }
                 this.connectServer();
+                ExternalInterface.addCallback("sendData", this.sendData);
             }
             public function connectServer():void {
                 socket = new Socket();
@@ -68,37 +71,30 @@ package {
 
 
             public function onTrueConnect():void {
-                ExternalInterface.call("connectHandle");
+                ExternalInterface.call(this.handlers+".onConnect",this.movieName);
             }
             
             public function onClose(e:Event):void {
-                ExternalInterface.call("closeHandle",'1');
+                ExternalInterface.call(this.handlers+".onClose",this.movieName,'1');
             }
 
             public function onIOError(e:IOErrorEvent):void {
-                ExternalInterface.call("closeHandle",'2');
+                ExternalInterface.call(this.handlers+".onClose",this.movieName,'2');
             }
 
             public function onSecurityError(e:SecurityErrorEvent):void {
-                ExternalInterface.call("closeHandle",'3');
+                ExternalInterface.call(this.handlers+".onClose",this.movieName,'3');
             }
             
             public var step:String = "head";
             
             
-            public function readData():void {
-                
-            }
 
             public var position:Number = 0;
 
-            public function debug(str:*):void {
-                ExternalInterface.call("console.log",str);
-            }
+            
             public function readOnData():void {
 
-                
-                
                 var tmpPos:Number = this.position;
                 this.socketBuffer.position = this.position;
 
@@ -143,7 +139,7 @@ package {
                 }
             }
             public function onText(text:String):void {
-                ExternalInterface.call("onText",text);
+                ExternalInterface.call(this.handlers+".onData",this.movieName,text);
             }
             
             public function writeBytes(bytes:ByteArray):void {
@@ -216,6 +212,12 @@ package {
                 this.socket.writeBytes(head);
                 this.socket.writeBytes(body);
                 this.socket.flush();
+            }
+            
+            public function debug(str:*):void {
+                if(this.isDebug) {
+                    ExternalInterface.call(this.handlers+".debug",this.movieName,str);
+                }
             }
 	}
 }
