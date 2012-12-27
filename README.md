@@ -11,3 +11,5 @@ websocket4ie
 
 其它看test.htm
 
+
+在flash里,是否将缓存的数据buffer在每读一个数据块的时候清掉?
