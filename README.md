@@ -12,4 +12,10 @@ websocket4ie
 其它看test.htm
 
 
+
+
+还有一个问题，默认的websocket是mask的，但是我这儿模拟的时候并没有mask，所以需要服务端在处理数据的时候对mask判断一下
+
+
+
 在flash里,是否将缓存的数据buffer在每读一个数据块的时候清掉?
